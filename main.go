@@ -28,6 +28,9 @@ func (t Training) distance() float64 {
 func (t Training) meanSpeed() float64 {
 
 	d := t.distance()
+	if d == 0 {
+		return 0
+	}
 	return d / float64(t.Duration)
 }
 
@@ -137,7 +140,10 @@ type Swimming struct {
 }
 
 func (s Swimming) meanSpeed() float64 {
-
+	d := s.distance()
+	if d == 0 {
+		return 0
+	}
 	mSpeed := float64(s.LengthPool) * float64(s.CountPool) / float64(MInKm) / float64(s.Duration)
 	return mSpeed
 }
