@@ -22,7 +22,7 @@ type Training struct {
 
 func (t Training) distance() float64 {
 
-	return float64(t.Action) * LenStep / float64(MInKm)
+	return float64(t.Action) * LenStep / MInKm
 }
 
 func (t Training) meanSpeed() float64 {
@@ -31,7 +31,7 @@ func (t Training) meanSpeed() float64 {
 	if d == 0 {
 		return 0
 	}
-	return d / float64(t.Duration)
+	return d / t.Duration.Hours()
 }
 
 func (t Training) Calories() float64 {
@@ -84,18 +84,12 @@ type Running struct {
 
 func (r Running) Calories() float64 {
 
-	return ((CaloriesMeanSpeedMultiplier*r.meanSpeed() + CaloriesMeanSpeedShift) * float64(r.Weight) / MInKm * float64(r.Duration) * MinInHours)
+	return ((CaloriesMeanSpeedMultiplier*r.meanSpeed() + CaloriesMeanSpeedShift) * float64(r.Weight) / MInKm * r.Duration.Hours() * MinInHours)
 }
 
 func (r Running) TrainingInfo() InfoMessage {
 
-	return InfoMessage{
-		r.TrainingType,
-		r.Duration,
-		r.distance(),
-		r.meanSpeed(),
-		r.Calories(),
-	}
+	return r.Training.TrainingInfo()
 }
 
 const (
@@ -107,24 +101,17 @@ const (
 type Walking struct {
 	Training
 	Height float64
-	Weight float64
 }
 
 func (w Walking) Calories() float64 {
 
-	return ((CaloriesWeightMultiplier*w.Weight + (w.meanSpeed()*w.meanSpeed()/w.Height)*CaloriesSpeedHeightMultiplier*w.Weight) * float64(w.Duration) * MinInHours)
+	return ((CaloriesWeightMultiplier*w.Height + ((w.meanSpeed()*KmHInMsec)*(w.meanSpeed()*KmHInMsec)/w.Height*CmInM)*CaloriesSpeedHeightMultiplier*w.Height) * w.Duration.Hours() * MinInHours)
 
 }
 
 func (w Walking) TrainingInfo() InfoMessage {
 
-	return InfoMessage{
-		w.TrainingType,
-		w.Duration,
-		w.distance(),
-		w.meanSpeed(),
-		w.Calories(),
-	}
+	return w.Training.TrainingInfo()
 }
 
 const (
@@ -135,8 +122,8 @@ const (
 
 type Swimming struct {
 	Training
-	LengthPool int
-	CountPool  int
+	LengthPool float64
+	CountPool  float64
 }
 
 func (s Swimming) meanSpeed() float64 {
@@ -144,12 +131,13 @@ func (s Swimming) meanSpeed() float64 {
 	if d == 0 {
 		return 0
 	}
-	mSpeed := float64(s.LengthPool) * float64(s.CountPool) / float64(MInKm) / float64(s.Duration)
+	mSpeed := s.LengthPool * s.CountPool / MInKm / s.Duration.Hours()
+
 	return mSpeed
 }
 
 func (s Swimming) Calories() float64 {
-	calories := (s.meanSpeed() + SwimmingCaloriesMeanSpeedShift) * SwimmingCaloriesWeightMultiplier * float64(s.Weight) * float64(s.Duration)
+	calories := (s.meanSpeed() + SwimmingCaloriesMeanSpeedShift) * SwimmingCaloriesWeightMultiplier * float64(s.Weight) * s.Duration.Hours()
 	return calories
 }
 
